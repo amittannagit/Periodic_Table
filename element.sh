@@ -1,35 +1,25 @@
 #!/bin/bash
 
-# Check if an argument is provided
-if [ -z "$1" ]; then
+PSQL="psql --username=freecodecamp --dbname=periodic_table -t --no-align -c"
+
+if [[ -z $1 ]]
+then
   echo "Please provide an element as an argument."
-  exit 0
+else
+  if [[ $1 =~ ^[0-9]+$ ]]
+  then
+    ELEMENT=$($PSQL "SELECT atomic_number, name, symbol, type, atomic_mass, melting_point_celsius, boiling_point_celsius FROM elements INNER JOIN properties USING(atomic_number) INNER JOIN types USING(type_id) WHERE atomic_number=$1")
+  else
+    ELEMENT=$($PSQL "SELECT atomic_number, name, symbol, type, atomic_mass, melting_point_celsius, boiling_point_celsius FROM elements INNER JOIN properties USING(atomic_number) INNER JOIN types USING(type_id) WHERE name='$1' OR symbol='$1'")
+  fi
+
+  if [[ -z $ELEMENT ]]
+  then
+    echo "I could not find that element in the database."
+  else
+    echo $ELEMENT | while IFS="|" read ATOMIC_NUMBER NAME SYMBOL TYPE MASS MELTING BOILING
+    do
+      echo "The element with atomic number $ATOMIC_NUMBER is $NAME ($SYMBOL). It's a $TYPE, with a mass of $MASS amu. $NAME has a melting point of $MELTING celsius and a boiling point of $BOILING celsius."
+    done
+  fi
 fi
-
-# Database credentials
-DB_NAME="periodic_table"
-DB_USER="freecodecamp"
-
-# Argument passed to the script
-ARGUMENT=$1
-
-# Query to fetch element details
-ELEMENT_QUERY="SELECT elements.atomic_number, elements.name, elements.symbol, properties.atomic_mass, types.type, properties.melting_point_celsius, properties.boiling_point_celsius 
-               FROM elements 
-               JOIN properties ON elements.atomic_number = properties.atomic_number 
-               JOIN types ON properties.type_id = types.type_id 
-               WHERE elements.atomic_number::text = '$ARGUMENT' OR elements.symbol = '$ARGUMENT' OR elements.name = '$ARGUMENT'"
-
-# Execute query
-ELEMENT_DETAILS=$(psql -U "$DB_USER" -d "$DB_NAME" -t --no-align -c "$ELEMENT_QUERY")
-
-# Check if the element was found
-if [ -z "$ELEMENT_DETAILS" ]; then
-  echo "I could not find that element in the database."
-  exit 0
-fi
-
-# Parse and display the element details
-IFS="|" read -r ATOMIC_NUMBER NAME SYMBOL ATOMIC_MASS TYPE MELTING_POINT BOILING_POINT <<< "$ELEMENT_DETAILS"
-
-echo "The element with atomic number $ATOMIC_NUMBER is $NAME ($SYMBOL). It's a $TYPE, with a mass of $ATOMIC_MASS amu. $NAME has a melting point of $MELTING_POINT celsius and a boiling point of $BOILING_POINT celsius."
