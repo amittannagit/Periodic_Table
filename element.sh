@@ -2,7 +2,7 @@
 
 # Check if an argument is provided
 if [ -z "$1" ]; then
-  echo "Please provide an element as an argument." >echo "Please provide an element as an argument."2
+  echo "Please provide an element as an argument." >echo "Please provide an element as an argument."2 >echo "Please provide an element as an argument."2
   exit 0
 fi
 
