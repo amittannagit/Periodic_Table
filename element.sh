@@ -36,3 +36,4 @@ echo "The element with atomic number $ATOMIC_NUMBER is $NAME ($SYMBOL). It's a $
 # This script queries the periodic table database
 # This script queries the periodic table database
 # This script queries the periodic table database
+# TODO: Add unit tests
